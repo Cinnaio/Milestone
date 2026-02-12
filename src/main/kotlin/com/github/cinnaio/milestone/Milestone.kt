@@ -5,6 +5,7 @@ import com.github.cinnaio.milestone.advancement.AdvancementPacketBlocker
 import com.github.cinnaio.milestone.advancement.AdvancementSyncServiceImpl
 import com.github.cinnaio.milestone.advancement.VanillaBlocker
 import com.github.cinnaio.milestone.command.MilestoneCommand
+import com.github.cinnaio.milestone.config.MessageManager
 import com.github.cinnaio.milestone.config.MilestoneLoader
 import com.github.cinnaio.milestone.service.MilestoneService
 import com.github.cinnaio.milestone.service.MilestoneServiceImpl
@@ -27,40 +28,44 @@ class Milestone : JavaPlugin() {
     private lateinit var advancementSync: AdvancementSyncServiceImpl
     private lateinit var packetBlocker: AdvancementPacketBlocker
     private lateinit var vanillaBlocker: VanillaBlocker
+    lateinit var messageManager: MessageManager
+        private set
 
     override fun onEnable() {
         saveDefaultConfig()
         
+        // Initialize MessageManager
+        messageManager = MessageManager(this)
+        messageManager.reload()
+
+        val console = server.consoleSender
+        val debug = config.getBoolean("debug", false)
+        val debugLogs = if (debug) mutableListOf<String>() else null
+        
         // --- Startup Info ---
         val description = description
-        val console = server.consoleSender
         
         console.sendMessage(" ")
-        console.sendMessage("${ColorUtil.HIGHLIGHT}${description.name} ${ColorUtil.PRIMARY}v${description.version}")
-        console.sendMessage("${ColorUtil.SECONDARY}Running on ${server.version} (MC: ${server.bukkitVersion})")
+        console.sendMessage(ColorUtil.translate("${ColorUtil.HIGHLIGHT}${description.name} ${ColorUtil.PRIMARY}v${description.version}", console))
+        console.sendMessage(ColorUtil.translate("${ColorUtil.SECONDARY}Running on ${ColorUtil.PRIMARY}${server.version} (MC: ${server.bukkitVersion})", console))
         console.sendMessage(" ")
         
         if (server.pluginManager.getPlugin("ProtocolLib") != null) {
-             console.sendMessage("${ColorUtil.SUCCESS}ProtocolLib was found - Enabling capabilities.")
+             console.sendMessage(ColorUtil.translate("${ColorUtil.SUCCESS}ProtocolLib was found - Enabling capabilities.", console))
         } else {
-             console.sendMessage("${ColorUtil.ERROR}ProtocolLib not found! Packet blocking features will be disabled.")
+             console.sendMessage(ColorUtil.translate("${ColorUtil.ERROR}ProtocolLib not found! Packet blocking features will be disabled.", console))
         }
         
         if (server.pluginManager.getPlugin("PlaceholderAPI") != null) {
-             console.sendMessage("${ColorUtil.SUCCESS}PlaceholderAPI was found - Enabling placeholders.")
+             console.sendMessage(ColorUtil.translate("${ColorUtil.SUCCESS}PlaceholderAPI was found - Enabling placeholders.", console))
         }
         
         val dbType = config.getString("database.type", "sqlite")?.uppercase()
-        console.sendMessage("${ColorUtil.HIGHLIGHT}Database: ${ColorUtil.PRIMARY}$dbType")
+        console.sendMessage(ColorUtil.translate("${ColorUtil.HIGHLIGHT}Database: ${ColorUtil.PRIMARY}$dbType", console))
         console.sendMessage(" ")
         
-        val debug = config.getBoolean("debug", false)
-        if (debug) {
-            logger.info("Debug mode enabled.")
-        }
-        
         // --- Database Initialization ---
-        console.sendMessage("${ColorUtil.PRIMARY}Database starting...")
+        console.sendMessage(ColorUtil.translate("${ColorUtil.PRIMARY}Database starting...", console))
         
         // Suppress HikariCP logs (using Log4j2)
         Configurator.setLevel("com.zaxxer.hikari", Log4jLevel.ERROR)
@@ -77,7 +82,7 @@ class Milestone : JavaPlugin() {
                 repository = SqliteRepository(dataFolder, logger)
             }
             repository.init()
-            console.sendMessage("${ColorUtil.PRIMARY}Database completed.")
+            console.sendMessage(ColorUtil.translate("${ColorUtil.PRIMARY}Database completed.", console))
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Failed to initialize database", e)
             server.pluginManager.disablePlugin(this)
@@ -90,14 +95,14 @@ class Milestone : JavaPlugin() {
         console.sendMessage(" ")
         
         // --- Loading Milestones ---
-        console.sendMessage("${ColorUtil.PRIMARY}Loading milestones...")
+        console.sendMessage(ColorUtil.translate("${ColorUtil.PRIMARY}Loading milestones...", console))
         // --------------------
 
         advancementSync = AdvancementSyncServiceImpl(this)
-        service = MilestoneServiceImpl(this, repository, advancementSync)
+        service = MilestoneServiceImpl(this, repository, advancementSync, messageManager)
         
         // Load milestones from config
-        loadMilestones(debug)
+        loadMilestones(debug, debugLogs)
         
         // Register advancements after loading milestones
         advancementSync.registerMilestones(service.getAllMilestones())
@@ -119,29 +124,33 @@ class Milestone : JavaPlugin() {
         // vanillaBlocker.apply(mode, blockedNs, blockedIds, debug)
 
         server.pluginManager.registerEvents(VanillaTriggerListeners(service), this)
-        getCommand("milestone")?.setExecutor(MilestoneCommand(this, service))
+        getCommand("milestone")?.setExecutor(MilestoneCommand(this, service, messageManager))
         
         console.sendMessage(" ")
-        console.sendMessage("${ColorUtil.SUCCESS}Milestone plugin enabled!")
+        console.sendMessage(ColorUtil.translate("${ColorUtil.SUCCESS}Milestone plugin enabled!", console))
+        
+        if (debug && debugLogs != null) {
+            console.sendMessage(ColorUtil.translate("${ColorUtil.HIGHLIGHT}Debug mode enabled.", console))
+            for (log in debugLogs) {
+                console.sendMessage(log)
+            }
+        }
     }
 
     override fun onDisable() {
         if (::repository.isInitialized) {
             repository.shutdown()
         }
-        logger.info("Milestone plugin disabled!")
+        server.consoleSender.sendMessage(ColorUtil.translate("${ColorUtil.SUCCESS}Milestone plugin disabled!", server.consoleSender))
     }
 
     fun reload() {
         reloadConfig()
         val debug = config.getBoolean("debug", false)
+        val console = server.consoleSender
         
-        // Reload Milestones
-        service.clearMilestones()
-        loadMilestones(debug)
-        
-        // Re-register advancements (Sync)
-        advancementSync.registerMilestones(service.getAllMilestones())
+        // Reload Messages
+        messageManager.reload()
         
         // Reload Blocker
         val modeStr = config.getString("advancement.mode", "HYBRID")!!
@@ -151,10 +160,10 @@ class Milestone : JavaPlugin() {
         
         packetBlocker.init(mode, blockedNs, blockedIds, debug)
         
-        logger.info("Milestone configuration and milestones reloaded.")
+        console.sendMessage(ColorUtil.translate("${ColorUtil.SUCCESS}Milestone configuration reloaded.", console))
     }
 
-    private fun loadMilestones(debug: Boolean) {
+    private fun loadMilestones(debug: Boolean, debugLogs: MutableList<String>? = null) {
         val loader = MilestoneLoader(this)
         val milestonesDir = File(dataFolder, "milestones")
         val milestones = loader.loadAll(milestonesDir)
@@ -162,10 +171,15 @@ class Milestone : JavaPlugin() {
         for (milestone in milestones) {
             service.registerMilestone(milestone)
             if (debug) {
-                logger.info("Registered milestone: ${milestone.id} (Type: ${milestone.type})")
+                val log = ColorUtil.translate("${ColorUtil.SECONDARY}[Milestone] Registered milestone: ${ColorUtil.HIGHLIGHT}${milestone.id} ${ColorUtil.SECONDARY}(Type: ${milestone.type})", server.consoleSender)
+                if (debugLogs != null) {
+                    debugLogs.add(log)
+                } else {
+                    server.consoleSender.sendMessage(log)
+                }
             }
         }
         
-        server.consoleSender.sendMessage("${ColorUtil.SUCCESS}Loaded ${milestones.size} milestones in total.")
+        server.consoleSender.sendMessage(ColorUtil.translate("${ColorUtil.SUCCESS}Loaded ${milestones.size} milestones in total.", server.consoleSender))
     }
 }

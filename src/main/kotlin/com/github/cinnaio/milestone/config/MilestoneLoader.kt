@@ -64,7 +64,7 @@ class MilestoneLoader(private val plugin: Plugin) {
                 
                 // Formatted Log Output
                 val console = Bukkit.getConsoleSender()
-                console.sendMessage("${ColorUtil.PRIMARY}  > Loading ${ColorUtil.HIGHLIGHT}${file.name} ${ColorUtil.SECONDARY}(Namespace: ${ColorUtil.HIGHLIGHT}${defaultNamespace ?: "milestone"}${ColorUtil.SECONDARY})")
+                console.sendMessage(ColorUtil.translate("${ColorUtil.PRIMARY}  > Loading ${ColorUtil.HIGHLIGHT}${file.name} ${ColorUtil.SECONDARY}(Namespace: ${ColorUtil.HIGHLIGHT}${defaultNamespace ?: "milestone"}${ColorUtil.SECONDARY})", console))
                 
                 milestones.addAll(loadFromFile(file, defaultNamespace))
             } catch (e: Exception) {

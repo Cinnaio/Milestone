@@ -46,7 +46,7 @@ object AdvancementMapper {
                 $backgroundJson
                 "frame": "$frame",
                 "show_toast": ${milestone.showToast},
-                "announce_to_chat": ${milestone.announceToChat},
+                "announce_to_chat": false,
                 "hidden": ${!milestone.isVisible}
             },
             $parentJson

@@ -180,20 +180,24 @@ class AdvancementPacketBlocker(private val plugin: Plugin, private val service: 
             
             if (json != null && json.contains("chat.type.advancement")) {
                 val milestones = service.getAllMilestones()
-                var isMilestone = false
+                
+                // 1. Check if this corresponds to a Milestone
+                // Since Milestone handles its own broadcasting, we should ALWAYS block the vanilla broadcast for it
+                // to avoid duplicate messages (one from Milestone, one from Vanilla).
                 for (m in milestones) {
                     if (json.contains(m.title)) {
-                        isMilestone = true
-                        break
+                        event.isCancelled = true
+                        if (debug) plugin.logger.info("[PacketBlocker] Blocked milestone broadcast: $json")
+                        return
                     }
                 }
                 
-                if (!isMilestone) {
-                     var shouldBlock = false
+                // 2. If not a milestone, apply standard blocking rules
+                var shouldBlock = false
                      
-                     if (mode == VanillaBlocker.Mode.DISABLE_VANILLA) {
-                         shouldBlock = true
-                     } else if (mode == VanillaBlocker.Mode.HYBRID) {
+                if (mode == VanillaBlocker.Mode.DISABLE_VANILLA) {
+                    shouldBlock = true
+                } else if (mode == VanillaBlocker.Mode.HYBRID) {
                          // Check for Vanilla translation keys
                          // Vanilla keys usually look like "advancements.story.root.title"
                          // If "minecraft" is blocked, we block all vanilla-like keys
@@ -220,9 +224,8 @@ class AdvancementPacketBlocker(private val plugin: Plugin, private val service: 
 
                      if (shouldBlock) {
                          event.isCancelled = true
-                         if (debug) plugin.logger.info("[PacketBlocker] Blocked advancement chat: $json")
+                         if (debug) plugin.logger.info("[PacketBlocker] Blocked vanilla advancement chat: $json")
                      }
-                }
             }
         } catch (e: Exception) {
             // Ignore errors

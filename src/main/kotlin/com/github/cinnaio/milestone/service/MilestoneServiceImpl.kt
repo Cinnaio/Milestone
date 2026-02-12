@@ -3,6 +3,7 @@ package com.github.cinnaio.milestone.service
 import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
 import com.github.cinnaio.milestone.advancement.AdvancementSyncService
+import com.github.cinnaio.milestone.config.MessageManager
 import com.github.cinnaio.milestone.core.Milestone
 import com.github.cinnaio.milestone.core.MilestoneType
 import com.github.cinnaio.milestone.core.Progress
@@ -15,7 +16,8 @@ import java.util.concurrent.ConcurrentHashMap
 class MilestoneServiceImpl(
     private val plugin: Plugin,
     private val repository: ProgressRepository,
-    private val advancementSync: AdvancementSyncService
+    private val advancementSync: AdvancementSyncService,
+    private val messageManager: MessageManager
 ) : MilestoneService {
 
     private val milestones = ConcurrentHashMap<String, Milestone>()
@@ -130,6 +132,33 @@ class MilestoneServiceImpl(
         val player = Bukkit.getPlayer(playerId)
         if (player != null) {
             advancementSync.syncOne(player, progress)
+            
+            if (progress.isCompleted) {
+                val milestone = milestones[progress.milestoneId]
+                if (milestone != null && milestone.announceToChat) {
+                    broadcastCompletion(player, milestone)
+                }
+            }
         }
+    }
+
+    private fun broadcastCompletion(player: org.bukkit.entity.Player, milestone: Milestone) {
+        // Broadcast to all online players with their locale
+        for (recipient in Bukkit.getOnlinePlayers()) {
+            val message = messageManager.getComponent(recipient, "broadcast_completion", mapOf(
+                "player" to player.name,
+                "milestone" to milestone.title,
+                "description" to milestone.description.joinToString("<newline>")
+            ))
+            recipient.sendMessage(message)
+        }
+        
+        val console = Bukkit.getConsoleSender()
+        val consoleMsg = messageManager.getComponent(console, "broadcast_completion", mapOf(
+            "player" to player.name,
+            "milestone" to milestone.title,
+            "description" to milestone.description.joinToString("<newline>")
+        ))
+        console.sendMessage(consoleMsg)
     }
 }

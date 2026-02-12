@@ -10,4 +10,7 @@ interface ProgressRepository {
     fun loadPlayerProgress(playerId: UUID): Map<String, Progress>
     fun savePlayerProgress(progress: Progress)
     fun saveAll(progressList: List<Progress>)
+    
+    fun getTopPlayers(after: java.time.Instant, limit: Int): List<Pair<String, Int>>
+    fun getPlayerCountWithCompletions(after: java.time.Instant): Int
 }

@@ -125,7 +125,64 @@ milestones:
 | `CONSUME_ITEM` | 消耗物品 (吃/喝) | `APPLE`, `POTION` |
 | `CRAFT_ITEM` | 合成物品 | `DIAMOND_SWORD` |
 
-## 6. 常见问题
+## 7. 奖励系统 (Rewards)
+
+在 `rewards` 列表中，您可以使用以下前缀来执行不同类型的奖励操作：
+
+| 前缀 | 说明 | 示例 | 备注 |
+| :--- | :--- | :--- | :--- |
+| `[player]` | 以玩家身份执行命令 | `[player] me 完成了成就！` | 默认行为 |
+| `[console]` | 以控制台身份执行命令 | `[console] say %player% 真棒` | **Folia 核心自动禁用** |
+| `[op]` | 临时赋予 OP 权限执行命令 | `[op] fly` | 执行后自动撤销 OP |
+| `[message]` | 发送私聊消息 | `[message] <color:#6BFF95>奖励已发放！` | 支持 RGB |
+| `[broadcast]` | 发送全服广播 | `[broadcast] <color:#FFD479>恭喜 %player%！` | 支持 RGB |
+| `[title]` | 发送标题 | `[title] 恭喜;完成成就` | 格式: 主标题;副标题 |
+| `[potion]` | 给予药水效果 | `[potion] SPEED;200;1` | 格式: 类型;Tick;等级 |
+| `[money]` | 给予金钱 (需 Vault) | `[money] 100` | 需要安装 Vault 和经济插件 |
+
+示例：
+```yaml
+    rewards:
+      - "[console] give %player% diamond 1"
+      - "[message] <green>你获得了 1 颗钻石！"
+      - "[money] 100"
+```
+
+## 8. PlaceholderAPI 变量
+
+插件提供了一系列 PAPI 变量，用于在计分板、聊天栏或菜单中展示成就信息。
+
+### 8.1 基础变量
+- `%milestone_status_<id>%`: 玩家是否完成成就 (`completed` / `incomplete`)
+- `%milestone_is_completed_<id>%`: 是否完成 (`true` / `false`)
+- `%milestone_current_<id>%`: 当前进度数值
+- `%milestone_max_<id>%`: 目标进度数值
+- `%milestone_percent_<id>%`: 完成百分比 (0-100)
+
+### 8.2 排行榜变量 (Leaderboards)
+数据每 5 分钟自动更新一次。支持查询 **Weekly** (本周, 周一至周一), **Monthly** (本月), **Total** (历史总榜)。
+
+**格式**: `%milestone_top_<type>_<field>_<rank>%`
+- `<type>`: `weekly`, `monthly`, `total`
+- `<field>`: `name` (玩家名), `score` (完成数量)
+- `<rank>`: 排名 (1, 2, 3...)
+
+**示例**:
+- `%milestone_top_weekly_name_1%`: 本周第一名玩家名
+- `%milestone_top_total_score_1%`: 历史总榜第一名完成数量
+- `%milestone_top_monthly_name_3%`: 本月第三名玩家名
+
+### 8.3 百分比排名变量
+展示前 X% 的玩家列表。
+
+**格式**: `%milestone_<type>_top_percent_names_<percent>%`
+- `<type>`: `weekly`, `monthly`
+- `<percent>`: 百分比 (1-100)
+
+**示例**:
+- `%milestone_weekly_top_percent_names_10%`: 本周完成度前 10% 的玩家列表 (逗号分隔)
+
+## 9. 常见问题
 
 - **Q: 为什么成就没有显示？**
   - A: 检查 `parent` ID 是否正确。如果是根成就，确保它没有父节点。检查 `category` 是否已定义。

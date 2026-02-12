@@ -52,4 +52,14 @@ object FoliaExecutor {
         }
         return future
     }
+
+    fun runTimerAsync(plugin: Plugin, delayTicks: Long, periodTicks: Long, task: Runnable) {
+        if (isFolia()) {
+            val delayMs = delayTicks * 50L
+            val periodMs = periodTicks * 50L
+            Bukkit.getAsyncScheduler().runAtFixedRate(plugin, { task.run() }, delayMs, periodMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+        } else {
+            Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, delayTicks, periodTicks)
+        }
+    }
 }

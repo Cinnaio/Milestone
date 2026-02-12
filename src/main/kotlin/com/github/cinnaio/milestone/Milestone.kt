@@ -14,6 +14,8 @@ import com.github.cinnaio.milestone.storage.ProgressRepository
 import com.github.cinnaio.milestone.storage.SqliteRepository
 import com.github.cinnaio.milestone.trigger.VanillaTriggerListeners
 import com.github.cinnaio.milestone.util.RewardExecutor
+import com.github.cinnaio.milestone.papi.MilestoneExpansion
+import com.github.cinnaio.milestone.service.LeaderboardManager
 import java.io.File
 import java.util.logging.Level
 
@@ -29,6 +31,7 @@ class Milestone : JavaPlugin() {
     private lateinit var advancementSync: AdvancementSyncServiceImpl
     private lateinit var packetBlocker: AdvancementPacketBlocker
     private lateinit var vanillaBlocker: VanillaBlocker
+    private lateinit var leaderboardManager: LeaderboardManager
     lateinit var messageManager: MessageManager
         private set
 
@@ -103,6 +106,15 @@ class Milestone : JavaPlugin() {
         val rewardExecutor = RewardExecutor(this, messageManager)
         service = MilestoneServiceImpl(this, repository, advancementSync, messageManager, rewardExecutor)
         
+        // Initialize Leaderboard Manager
+        leaderboardManager = LeaderboardManager(this, repository)
+        leaderboardManager.start()
+        
+        // Register PlaceholderAPI expansion
+        if (server.pluginManager.getPlugin("PlaceholderAPI") != null) {
+            MilestoneExpansion(this, service, leaderboardManager).register()
+        }
+
         // Load milestones from config
         loadMilestones(debug, debugLogs)
         

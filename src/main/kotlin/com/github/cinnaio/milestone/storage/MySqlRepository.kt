@@ -129,4 +129,42 @@ class MySqlRepository(private val config: ConfigurationSection, private val logg
         
         stmt.executeUpdate()
     }
+
+    override fun getTopPlayers(after: java.time.Instant, limit: Int): List<Pair<String, Int>> {
+        val results = mutableListOf<Pair<String, Int>>()
+        dataSource?.connection?.use { conn ->
+            val sql = """
+                SELECT player_name, COUNT(*) as c 
+                FROM milestone_progress 
+                WHERE is_completed = 1 AND completed_time >= ? 
+                GROUP BY player_id 
+                ORDER BY c DESC 
+                LIMIT ?
+            """.trimIndent()
+            
+            val stmt = conn.prepareStatement(sql)
+            stmt.setTimestamp(1, Timestamp.from(after))
+            stmt.setInt(2, limit)
+            
+            val rs = stmt.executeQuery()
+            while (rs.next()) {
+                results.add(rs.getString("player_name") to rs.getInt("c"))
+            }
+        }
+        return results
+    }
+
+    override fun getPlayerCountWithCompletions(after: java.time.Instant): Int {
+        var count = 0
+        dataSource?.connection?.use { conn ->
+            val sql = "SELECT COUNT(DISTINCT player_id) FROM milestone_progress WHERE is_completed = 1 AND completed_time >= ?"
+            val stmt = conn.prepareStatement(sql)
+            stmt.setTimestamp(1, Timestamp.from(after))
+            val rs = stmt.executeQuery()
+            if (rs.next()) {
+                count = rs.getInt(1)
+            }
+        }
+        return count
+    }
 }

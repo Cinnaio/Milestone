@@ -1,0 +1,36 @@
+# 是否开启调试模式
+# 开启后会在控制台打印更详细的日志，包括加载的成就、屏蔽的原版进度等信息。
+debug: true
+
+advancement:
+  # 屏蔽模式
+  # - DISABLE_VANILLA: 禁用所有非 Milestone 的原版进度（仅保留 Milestone）
+  # - HYBRID:          混合模式，允许原版进度和 Milestone 共存，但可以屏蔽指定的命名空间或 ID
+  # - VANILLA_ONLY:    仅显示原版进度（不推荐，会导致 Milestone 无法显示）
+  mode: HYBRID
+
+  # 需要屏蔽的进度命名空间列表（仅在 HYBRID 模式下生效）
+  # 例如: minecraft, story, nether, end, adventure, husbandry
+  # Vanilla 进度命名空间: https://zh.minecraft.wiki/w/%E8%BF%9B%E5%BA%A6?variant=zh-cn
+  block-namespaces:
+    - minecraft
+    - story
+    - nether
+    - end
+    - adventure
+    - husbandry
+
+  # 需要精确屏蔽的进度 ID 列表
+  block-ids: []
+
+database:
+  # 数据库类型: sqlite 或 mysql
+  type: sqlite
+
+  # MySQL 设置 (当 type 为 mysql 时生效)
+  host: localhost
+  port: 3306
+  database: milestone
+  username: root
+  password: ""
+  ssl: false

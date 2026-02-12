@@ -1,0 +1,133 @@
+# UI 总类别
+categories:
+  newbie:
+    name: "新玩家"
+    icon: PLAYER_HEAD
+    description: "新玩家成就"
+
+milestones:
+  # 根成就示例
+  "newbie:root":
+    type: ONE_TIME
+    icon: GRASS_BLOCK
+    title: "<color:#FFD479>欢迎来到里程碑"
+    description:
+      - "<color:#E6E6E6>开启你的冒险之旅"
+    trigger:
+      type: JOIN
+    rewards:
+      - "say <color:#6BFF95>欢迎 %player% 加入里程碑系统！"
+    show_toast: true
+    announce_to_chat: true
+
+  # 1. 加入游戏触发
+  "newbie:first_join":
+    parent: "newbie:root"
+    type: ONE_TIME
+    icon: OAK_DOOR
+    title: "<color:#FFD479>初来乍到"
+    description:
+      - "<color:#A0A0A0>第一次加入服务器"
+    trigger:
+      type: JOIN
+
+  # 2. 挖掘方块触发 (计数型)
+  "newbie:miner_beginner":
+    parent: "newbie:root"
+    type: COUNTER
+    max: 10
+    icon: STONE_PICKAXE
+    title: "<color:#FFD479>矿工学徒"
+    description:
+      - "<color:#E6E6E6>挖掘 10 个石头"
+    trigger:
+      type: BLOCK_BREAK
+      value: STONE  # 目标方块
+      # progress: 1 # (可选) 每次触发增加的进度值，默认为 1
+
+  # 3. 挖掘稀有矿物 (特定方块)
+  "newbie:diamond_hunter":
+    parent: "newbie:miner_beginner"
+    type: ONE_TIME
+    icon: DIAMOND
+    title: "<color:#FFD479>钻石猎人"
+    description:
+      - "<color:#E6E6E6>发现并挖掘一颗钻石矿"
+    trigger:
+      type: BLOCK_BREAK
+      value: DIAMOND_ORE
+
+  # 4. 放置方块 (任意方块通配符 *)
+  "newbie:builder":
+    parent: "newbie:root"
+    type: COUNTER
+    max: 50
+    icon: BRICK
+    title: "<color:#FFD479>建筑师"
+    description:
+      - "<color:#E6E6E6>放置 50 个任意方块"
+    trigger:
+      type: BLOCK_PLACE
+      value: "*"
+
+  # 5. 击杀实体
+  "newbie:monster_hunter":
+    parent: "newbie:root"
+    type: COUNTER
+    max: 5
+    icon: IRON_SWORD
+    title: "<color:#FFD479>怪物猎人"
+    description:
+      - "<color:#E6E6E6>击杀 5 只僵尸"
+    trigger:
+      type: KILL_ENTITY
+      value: ZOMBIE
+
+  # 6. 消耗物品 (吃东西/喝药水)
+  "newbie:apple_eater":
+    # parent: "newbie:root" # 指定父成就（如果不写，默认使用模板中的 parent，或者为 null）
+    parent: "newbie:root" 
+    
+    # 引用模板 ID
+    # 模板可以定义在当前文件的 templates 节点下，也可以在其他加载的文件中
+    template: "newbie:test"
+    
+    # overrides: 用于覆盖模板中的属性
+    # 注意：直接写在成就根节点的属性（如 icon, type）也会覆盖模板，但 overrides 节点内的属性优先级更高
+    overrides:
+      title: "<color:#FFD479>测试"
+      description:
+        - "<color:#E6E6E6>吃掉 3 个苹果"
+        
+    # augments: 变量替换
+    # 在模板中使用 ${key} 占位符，在此处定义 key: value 进行替换
+    augments:
+      custom: APPLE
+
+# 模板定义区域
+# 这些模板不会被注册为实际成就，仅供引用
+templates:
+  # 模板 ID: "newbie/test"
+  "newbie:test":
+    # 模板也可以有父成就，如果引用者没有覆盖 parent，则继承此 parent
+    parent: "newbie:root"
+    type: COUNTER
+    max: 3
+    icon: APPLE
+    title: "<color:#FFD479>健康饮食"
+    description:
+      - "<color:#E6E6E6>吃掉 3 个苹果"
+    trigger:
+      type: CONSUME_ITEM
+      value: "${custom}" # 使用变量占位符
+    rewards:
+      - "say <color:#6BFF95>测试成就已完成！"
+    show_toast: true
+    announce_to_chat: true
+    visible: true
+
+  # 另一个模板示例
+  "newbie":
+    show_toast: true
+    announce_to_chat: true
+    visible: true

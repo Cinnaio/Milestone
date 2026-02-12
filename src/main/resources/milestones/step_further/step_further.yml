@@ -1,0 +1,88 @@
+# UI 总类别
+categories:
+  step_further:
+    name: "进阶挑战"
+    icon: NETHER_STAR
+    description: "完成新手任务后的进阶挑战"
+
+milestones:
+  # 根成就
+  "step_further:root":
+    type: ONE_TIME
+    icon: OBSIDIAN
+    title: "<color:#FF5555>进阶之路"
+    description:
+      - "<color:#AAAAAA>准备好探索更危险的世界了吗？"
+    trigger:
+      type: JOIN
+    visible: true # 是否在 UI 中显示 (默认为 true)
+    show_toast: true
+    announce_to_chat: true
+
+  # 1. 挖掘黑曜石 (进阶挖掘)
+  "step_further:obsidian_miner":
+    parent: "step_further:root"
+    type: COUNTER
+    max: 10
+    icon: DIAMOND_PICKAXE
+    title: "<color:#A78BFA>坚硬的基石"
+    description:
+      - "<color:#E6E6E6>挖掘 10 个黑曜石"
+    trigger:
+      type: BLOCK_BREAK
+      value: OBSIDIAN
+    rewards:
+      - "give %player% experience_bottle 10"
+
+  # 2. 合成附魔台 (进阶合成)
+  "step_further:enchanter":
+    parent: "step_further:root"
+    type: ONE_TIME
+    icon: ENCHANTING_TABLE
+    title: "<color:#A78BFA>魔力觉醒"
+    description:
+      - "<color:#E6E6E6>合成一个附魔台"
+    trigger:
+      type: CRAFT_ITEM
+      value: ENCHANTING_TABLE
+
+  # 3. 击杀末影人 (进阶战斗)
+  "step_further:enderman_slayer":
+    parent: "step_further:root"
+    type: COUNTER
+    max: 3
+    icon: ENDER_PEARL
+    title: "<color:#A78BFA>虚空行者"
+    description:
+      - "<color:#E6E6E6>击杀 3 只末影人"
+    trigger:
+      type: KILL_ENTITY
+      value: ENDERMAN
+
+  # 4. 消耗金苹果 (进阶消耗)
+  "step_further:golden_life":
+    parent: "step_further:root"
+    type: ONE_TIME
+    icon: GOLDEN_APPLE
+    title: "<color:#A78BFA>黄金之心"
+    description:
+      - "<color:#E6E6E6>吃下一个金苹果"
+    trigger:
+      type: CONSUME_ITEM
+      value: GOLDEN_APPLE
+
+  # 5. 隐藏成就示例 (UI 不显示)
+  "step_further:secret_hero":
+    parent: "step_further:root"
+    type: ONE_TIME
+    icon: BEACON
+    title: "<color:#FF0000>??? 隐藏成就 ???"
+    description:
+      - "<color:#AAAAAA>这是一个隐藏成就，完成后才会提示"
+      - "<color:#AAAAAA>条件：击杀一只铁傀儡"
+    trigger:
+      type: KILL_ENTITY
+      value: IRON_GOLEM
+    visible: false # 控制选项：设置为 false 则不会在 UI 菜单中显示（直到完成或永远不显示，取决于 UI 实现）
+    show_toast: true # 完成时依然弹窗
+    announce_to_chat: true # 完成时依然广播

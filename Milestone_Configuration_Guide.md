@@ -49,29 +49,20 @@ categories:
 milestones:
   # 1. 唯一的成就 ID (namespace:key)
   "my_category:root":
-    # --- 基础设置 ---
     type: ONE_TIME      # 类型: ONE_TIME (一次性), COUNTER (计数型)
     category: "my_category" # 所属类别 ID
     parent: null        # 父成就 ID (根成就填 null 或不写)
-    
-    # --- 显示设置 ---
     icon: GRASS_BLOCK   # 显示图标
     title: "<color:#FFD479>起始点"  # 标题 (支持 RGB)
     description:        # 描述
       - "<color:#E6E6E6>这是第一个成就"
     visible: true       # 是否在 UI 中可见
-    
-    # --- 通知设置 (可选, 默认 true) ---
     show_toast: true       # 是否显示右上角弹窗 (Toast)
-    announce_to_chat: true # 是否在聊天栏广播
-
-    # --- 触发条件 ---
+    announce_to_chat: true # 是否在聊天栏广播 (仅控制插件自定义广播，原版广播已强制禁用)
     trigger:
       type: JOIN        # 触发类型
       value: ""         # 触发参数 (如方块名、实体名)
       progress: 1       # (可选) 每次触发增加的进度，默认为 1
-
-    # --- 奖励 ---
     rewards:
       - "give %player% diamond 1"
       - "say 恭喜 %player%！"
@@ -139,6 +130,8 @@ milestones:
 - **Q: 为什么成就没有显示？**
   - A: 检查 `parent` ID 是否正确。如果是根成就，确保它没有父节点。检查 `category` 是否已定义。
 - **Q: 修改配置后如何生效？**
-  - A: 建议重启服务器，或者使用插件提供的重载命令（如果已实现）。
+  - A: 建议重启服务器，或者使用 `/milestone reload` 重载命令（仅重载配置，成就变动建议重启）。
 - **Q: 不同文件的 ID 可以重复吗？**
   - A: **不可以**。所有加载的文件中的 ID 必须全局唯一。建议使用 `文件名:ID` 的方式命名以避免冲突。
+- **Q: 为什么会有两条广播消息？**
+  - A: 最新版本已修复此问题。插件会自动屏蔽原版的白色广播消息，`announce_to_chat` 仅控制插件自定义的彩色广播。

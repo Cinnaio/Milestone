@@ -11,6 +11,7 @@ import com.github.cinnaio.milestone.storage.ProgressRepository
 import com.github.cinnaio.milestone.util.FoliaExecutor
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 
 class MilestoneServiceImpl(
@@ -39,8 +40,8 @@ class MilestoneServiceImpl(
         milestones.clear()
     }
 
-    override fun loadPlayerData(playerId: UUID, playerName: String) {
-        FoliaExecutor.supplyAsync(plugin) {
+    override fun loadPlayerData(playerId: UUID, playerName: String): java.util.concurrent.CompletableFuture<Void> {
+        return FoliaExecutor.supplyAsync(plugin) {
             repository.loadPlayerProgress(playerId)
         }.thenAccept { loaded ->
             val playerMap = ConcurrentHashMap(loaded)

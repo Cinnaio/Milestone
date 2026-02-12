@@ -16,8 +16,9 @@ class VanillaTriggerListeners(private val milestoneService: MilestoneService) : 
 
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
-        milestoneService.loadPlayerData(event.player.uniqueId, event.player.name)
-        checkTriggers(event.player, TriggerType.JOIN)
+        milestoneService.loadPlayerData(event.player.uniqueId, event.player.name).thenRun {
+            checkTriggers(event.player, TriggerType.JOIN)
+        }
     }
 
     @EventHandler
@@ -80,9 +81,11 @@ class VanillaTriggerListeners(private val milestoneService: MilestoneService) : 
                 // If it's OneTime and no counter max, addProgress might not complete it immediately 
                 // unless we handle it. But assuming Counter logic handles "completion".
                 // For simple OneTime triggers without counter, we can just grant.
-                if (milestone.type !is com.github.cinnaio.milestone.core.MilestoneType.Counter) {
-                     milestoneService.grant(player.uniqueId, milestone.id)
-                }
+                // NOTE: addProgress already handles OneTime granting if amount > 0, so we should NOT call grant() again.
+                // calling grant() here causes double broadcast for OneTime milestones.
+                // if (milestone.type !is com.github.cinnaio.milestone.core.MilestoneType.Counter) {
+                //     milestoneService.grant(player.uniqueId, milestone.id)
+                // }
             }
         }
     }

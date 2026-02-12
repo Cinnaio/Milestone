@@ -10,7 +10,7 @@ interface MilestoneService : MilestoneApi {
     fun getAllMilestones(): List<Milestone>
     fun clearMilestones()
     
-    fun loadPlayerData(playerId: UUID, playerName: String)
+    fun loadPlayerData(playerId: UUID, playerName: String): java.util.concurrent.CompletableFuture<Void>
     fun unloadPlayerData(playerId: UUID)
     fun savePlayerData(playerId: UUID)
 }

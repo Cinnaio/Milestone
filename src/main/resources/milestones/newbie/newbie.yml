@@ -2,7 +2,7 @@
 categories:
   newbie:
     name: "新玩家"
-    icon: PLAYER_HEAD
+    icon: GRASS_BLOCK
     description: "新玩家成就"
 
 milestones:
@@ -19,17 +19,6 @@ milestones:
       - "say <color:#6BFF95>欢迎 %player% 加入里程碑系统！"
     show_toast: true
     announce_to_chat: true
-
-  # 1. 加入游戏触发
-  "newbie:first_join":
-    parent: "newbie:root"
-    type: ONE_TIME
-    icon: OAK_DOOR
-    title: "<color:#FFD479>初来乍到"
-    description:
-      - "<color:#A0A0A0>第一次加入服务器"
-    trigger:
-      type: JOIN
 
   # 2. 挖掘方块触发 (计数型)
   "newbie:miner_beginner":

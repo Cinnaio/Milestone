@@ -108,12 +108,12 @@ class MilestoneCommand(
     }
 
     private fun sendHelp(sender: CommandSender) {
-        sender.sendMessage(messageManager.get(sender, "command_help_header"))
-        sender.sendMessage(messageManager.get(sender, "command_help_progress"))
+        sender.sendMessage(messageManager.getComponent(sender, "command_help_header"))
+        sender.sendMessage(messageManager.getComponent(sender, "command_help_progress"))
         if (sender.hasPermission("milestone.admin")) {
-            sender.sendMessage(messageManager.get(sender, "command_help_reload"))
-            sender.sendMessage(messageManager.get(sender, "command_help_grant"))
-            sender.sendMessage(messageManager.get(sender, "command_help_revoke"))
+            sender.sendMessage(messageManager.getComponent(sender, "command_help_reload"))
+            sender.sendMessage(messageManager.getComponent(sender, "command_help_grant"))
+            sender.sendMessage(messageManager.getComponent(sender, "command_help_revoke"))
         }
     }
 }

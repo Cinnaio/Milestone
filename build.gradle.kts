@@ -4,17 +4,19 @@ plugins {
 }
 
 group = "com.github.cinnaio"
-version = "1.2.9"
+version = "1.3.1"
 
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.dmulloy2.net/repository/public/")
+    maven("https://jitpack.io")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     implementation(kotlin("stdlib-jdk8"))
     
     // Database connection pool

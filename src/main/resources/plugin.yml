@@ -4,7 +4,7 @@ main: com.github.cinnaio.milestone.Milestone
 api-version: '1.21'
 folia-supported: true
 authors: [Cinnaio]
-depend: [ProtocolLib]
+softdepend: [ProtocolLib, Vault]
 description: A server-grade achievement system.
 commands:
   milestone:

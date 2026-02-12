@@ -13,6 +13,7 @@ import com.github.cinnaio.milestone.storage.MySqlRepository
 import com.github.cinnaio.milestone.storage.ProgressRepository
 import com.github.cinnaio.milestone.storage.SqliteRepository
 import com.github.cinnaio.milestone.trigger.VanillaTriggerListeners
+import com.github.cinnaio.milestone.util.RewardExecutor
 import java.io.File
 import java.util.logging.Level
 
@@ -99,7 +100,8 @@ class Milestone : JavaPlugin() {
         // --------------------
 
         advancementSync = AdvancementSyncServiceImpl(this)
-        service = MilestoneServiceImpl(this, repository, advancementSync, messageManager)
+        val rewardExecutor = RewardExecutor(this, messageManager)
+        service = MilestoneServiceImpl(this, repository, advancementSync, messageManager, rewardExecutor)
         
         // Load milestones from config
         loadMilestones(debug, debugLogs)

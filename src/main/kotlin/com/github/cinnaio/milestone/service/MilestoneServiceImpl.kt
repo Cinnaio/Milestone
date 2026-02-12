@@ -9,6 +9,7 @@ import com.github.cinnaio.milestone.core.MilestoneType
 import com.github.cinnaio.milestone.core.Progress
 import com.github.cinnaio.milestone.storage.ProgressRepository
 import com.github.cinnaio.milestone.util.FoliaExecutor
+import com.github.cinnaio.milestone.util.RewardExecutor
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -18,7 +19,8 @@ class MilestoneServiceImpl(
     private val plugin: Plugin,
     private val repository: ProgressRepository,
     private val advancementSync: AdvancementSyncService,
-    private val messageManager: MessageManager
+    private val messageManager: MessageManager,
+    private val rewardExecutor: RewardExecutor
 ) : MilestoneService {
 
     private val milestones = ConcurrentHashMap<String, Milestone>()
@@ -136,8 +138,12 @@ class MilestoneServiceImpl(
             
             if (progress.isCompleted) {
                 val milestone = milestones[progress.milestoneId]
-                if (milestone != null && milestone.announceToChat) {
-                    broadcastCompletion(player, milestone)
+                if (milestone != null) {
+                    rewardExecutor.execute(player, milestone.rewards)
+                    
+                    if (milestone.announceToChat) {
+                        broadcastCompletion(player, milestone)
+                    }
                 }
             }
         }

@@ -14,11 +14,13 @@ class AdvancementSyncServiceImpl(
 ) : AdvancementSyncService {
 
     private val registeredKeys = ConcurrentHashMap.newKeySet<NamespacedKey>()
+    private val milestoneIdToKey = ConcurrentHashMap<String, NamespacedKey>()
 
     override fun init() {
     }
 
     fun registerMilestones(milestones: List<Milestone>) {
+        milestoneIdToKey.clear() // Clear old mapping
         FoliaExecutor.runGlobal(plugin) {
             // Unregister previously registered keys
             val it = registeredKeys.iterator()
@@ -38,6 +40,7 @@ class AdvancementSyncServiceImpl(
             
             for (milestone in sortedMilestones) {
                 val key = AdvancementMapper.getNamespacedKey(milestone)
+                milestoneIdToKey[milestone.id] = key
                 val json = AdvancementMapper.toAdvancementJson(milestone)
                 
                 try {
@@ -91,12 +94,18 @@ class AdvancementSyncServiceImpl(
     }
 
     override fun sync(player: Player, progressList: Collection<Progress>) {
+        // Create a set of completed milestone IDs for fast lookup
+        val completedIds = progressList.filter { it.isCompleted }.map { it.milestoneId }.toSet()
+
         FoliaExecutor.runPlayer(plugin, player) {
-            for (progress in progressList) {
-                if (progress.isCompleted) {
-                    grantCriteria(player, progress.milestoneId)
+            // Iterate over ALL registered milestones to ensure state consistency
+            // This ensures that if a milestone is NOT in the completed list (e.g. database reset),
+            // it will be revoked from the vanilla advancement system.
+            for ((id, key) in milestoneIdToKey) {
+                if (id in completedIds) {
+                    grantCriteria(player, key)
                 } else {
-                    revokeCriteria(player, progress.milestoneId)
+                    revokeCriteria(player, key)
                 }
             }
         }
@@ -104,33 +113,50 @@ class AdvancementSyncServiceImpl(
 
     override fun syncOne(player: Player, progress: Progress) {
         FoliaExecutor.runPlayer(plugin, player) {
-             if (progress.isCompleted) {
-                grantCriteria(player, progress.milestoneId)
-            } else {
-                revokeCriteria(player, progress.milestoneId)
-            }
+             val key = milestoneIdToKey[progress.milestoneId]
+             if (key != null) {
+                 if (progress.isCompleted) {
+                    grantCriteria(player, key)
+                } else {
+                    revokeCriteria(player, key)
+                }
+             } else {
+                 // Fallback if key not found in map (should not happen if registered correctly)
+                 // But for safety, use the old logic or log warning
+                 if (progress.isCompleted) {
+                    grantCriteria(player, progress.milestoneId)
+                } else {
+                    revokeCriteria(player, progress.milestoneId)
+                }
+             }
         }
     }
 
-    private fun grantCriteria(player: Player, milestoneId: String) {
-        val parts = milestoneId.split(":")
-        val key = if (parts.size > 1) NamespacedKey(parts[0], parts[1]) else NamespacedKey("milestone", milestoneId)
-        
+    private fun grantCriteria(player: Player, key: NamespacedKey) {
         val adv = Bukkit.getAdvancement(key) ?: return
         val prog = player.getAdvancementProgress(adv)
         if (!prog.isDone) {
             prog.awardCriteria("completed")
         }
     }
-    
-    private fun revokeCriteria(player: Player, milestoneId: String) {
-        val parts = milestoneId.split(":")
-        val key = if (parts.size > 1) NamespacedKey(parts[0], parts[1]) else NamespacedKey("milestone", milestoneId)
-        
+
+    private fun revokeCriteria(player: Player, key: NamespacedKey) {
         val adv = Bukkit.getAdvancement(key) ?: return
         val prog = player.getAdvancementProgress(adv)
         if (prog.isDone) {
             prog.revokeCriteria("completed")
         }
+    }
+
+    private fun grantCriteria(player: Player, milestoneId: String) {
+        val parts = milestoneId.split(":")
+        val key = if (parts.size > 1) NamespacedKey(parts[0], parts[1]) else NamespacedKey("milestone", milestoneId)
+        grantCriteria(player, key)
+    }
+    
+    private fun revokeCriteria(player: Player, milestoneId: String) {
+        val parts = milestoneId.split(":")
+        val key = if (parts.size > 1) NamespacedKey(parts[0], parts[1]) else NamespacedKey("milestone", milestoneId)
+        revokeCriteria(player, key)
     }
 }
